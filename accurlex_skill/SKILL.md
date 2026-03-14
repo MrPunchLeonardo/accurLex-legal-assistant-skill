@@ -106,7 +106,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 |------|------|------|
 | `ACCURLEX_PROXY_BASE_URL` | ✅ 是 | 流式 API 地址，固定为 `https://accurlex.com` |
 | `ACCURLEX_API_BASE_URL` | ✅ 是 | PHP API 地址，固定为 `https://accurlex.com/index.php` |
-| `ACCURLEX_BILLING_PHONE` | 付费工具需要 | 计费手机号（合同审查、文书生成、expert 问答） |
+| `ACCURLEX_BILLING_PHONE` | ✅ 是 | 注册手机号（所有查询类工具必需，请先到 https://accurlex.com 注册） |
 | `ACCURLEX_BEARER_TOKEN` | 账户查询需要 | 登录后获取的 JWT 令牌（7天有效期） |
 | `ACCURLEX_REQUEST_TIMEOUT_MS` | 否 | 请求超时毫秒数（默认 600000 = 10 分钟） |
 
@@ -118,7 +118,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 例如，如果 VS Code 打开的是 `C:\projects\my-workspace`，则配置文件路径必须是 `C:\projects\my-workspace\.vscode\settings.json`。
 
-**最小配置（免费功能可用）：**
+**基础配置（需先在 https://accurlex.com 注册，获取手机号后填入）：**
 
 ```json
 {
@@ -130,7 +130,8 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
         "args": ["-y", "accurlex-mcp-server"],
         "env": {
           "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-          "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php"
+          "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
+          "ACCURLEX_BILLING_PHONE": "你的注册手机号"
         }
       }
     }
@@ -138,7 +139,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 }
 ```
 
-**完整配置（登录后，付费功能可用）：**
+**完整配置（含 JWT 令牌，账户查询+付费功能可用）：**
 
 ```json
 {
@@ -180,7 +181,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 如果文件不存在，手动创建。
 
-**最小配置：**
+**基础配置（需先在 https://accurlex.com 注册）：**
 
 ```json
 {
@@ -190,14 +191,15 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
       "args": ["-y", "accurlex-mcp-server"],
       "env": {
         "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php"
+        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
+        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
       }
     }
   }
 }
 ```
 
-**完整配置（登录后）：**
+**完整配置（含 JWT 令牌）：**
 
 ```json
 {
@@ -237,7 +239,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 在 Cursor 中添加 MCP：`Settings` → `MCP` → `Add new MCP server`。
 
-**配置内容：**
+**配置内容（需先在 https://accurlex.com 注册）：**
 
 ```json
 {
@@ -247,7 +249,8 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
       "args": ["-y", "accurlex-mcp-server"],
       "env": {
         "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php"
+        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
+        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
       }
     }
   }
@@ -312,7 +315,8 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
       "args": ["-y", "accurlex-mcp-server"],
       "env": {
         "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php"
+        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
+        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
       }
     }
   }
@@ -335,6 +339,7 @@ If the user opens the manual MCP form in Lobster, fill fields as follows:
 - 环境变量:
   - `ACCURLEX_PROXY_BASE_URL` = `https://accurlex.com`
   - `ACCURLEX_API_BASE_URL` = `https://accurlex.com/index.php`
+  - `ACCURLEX_BILLING_PHONE` = 你的注册手机号
 
 After saving:
 
@@ -400,7 +405,8 @@ cfg = {
     "args": ["-y", "accurlex-mcp-server"],
     "env": {
         "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php"
+        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
+        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
     }
 }
 
@@ -429,7 +435,7 @@ After script success: reopen Lobster, re-check MCP tool availability, continue o
 
 ### 认证流程
 
-1. **免费功能无需登录** — `accurlex_legal_qa`（deep 模式）和 `accurlex_extract_text_from_file` 无需认证。
+1. **所有查询类工具均需要注册手机号** — 请先到 https://accurlex.com 注册账号，并在客户端配置中填写 `ACCURLEX_BILLING_PHONE`。`accurlex_extract_text_from_file`（本地文件）和 `accurlex_login` 除外。
 2. **账户查询需要登录** — `accurlex_get_account_status` 需要 JWT 令牌；合同审查、文书生成、expert 问答按当前实现需要 `ACCURLEX_BILLING_PHONE`。
 
 ### 登录步骤
@@ -462,7 +468,7 @@ After script success: reopen Lobster, re-check MCP tool availability, continue o
 | Tool | Description | Billing | Required Env | 预期耗时 |
 |------|-------------|---------|--------------|---------|
 | `accurlex_login` | 手机号+密码登录，返回 JWT 令牌 | free | `API_BASE_URL` | 1-3 秒 |
-| `accurlex_legal_qa` | 法律问答（deep 免费 / expert 付费） | deep=free, expert=paid | `PROXY_BASE_URL` | 10-30 秒 |
+| `accurlex_legal_qa` | 法律问答（deep 免费配额 / expert 付费） | deep=free quota, expert=paid | `PROXY_BASE_URL` + `BILLING_PHONE` | 10-30 秒 |
 | `accurlex_contract_review` | 合同审查 → 审查意见书 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` | **1-3 分钟** |
 | `accurlex_draft_document` | 法律文书生成 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` | **1-2 分钟** |
 | `accurlex_get_account_status` | 查询账户点数余额 | free | `API_BASE_URL` + `BEARER_TOKEN` | 1-3 秒 |
