@@ -49,7 +49,7 @@ The accurLex MCP server is published on npm as `accurlex-mcp-server`. It runs lo
 **Architecture:**
 
 ```
-AI Client (OpenClaw / VS Code Copilot / Claude Desktop / Cursor / Windsurf)
+AI Client (VS Code Copilot / Claude Desktop / Cursor / Windsurf)
     │  stdio
     ▼
 accurlex-mcp-server (local Node.js process, via npx)
@@ -87,7 +87,7 @@ The MCP server uses `dotenv` to load a `.env` file from its **current working di
 | VS Code Copilot | 工作区根目录（即 VS Code 打开的文件夹） |
 | Claude Desktop | 用户 HOME 目录 |
 | Cursor / Windsurf | 工作区根目录 |
-| OpenClaw / Lobster | 应用安装目录（不可控） |
+| 其他客户端 | 依客户端实现而定 |
 
 ⚠️ **如果使用 `.env` 方式，请确保 `.env` 文件放在上述 cwd 路径下**。推荐使用方式一以避免路径问题。
 
@@ -107,8 +107,10 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 | `ACCURLEX_PROXY_BASE_URL` | ✅ 是 | 流式 API 地址，固定为 `https://accurlex.com` |
 | `ACCURLEX_API_BASE_URL` | ✅ 是 | PHP API 地址，固定为 `https://accurlex.com/index.php` |
 | `ACCURLEX_BILLING_PHONE` | ✅ 是 | 注册手机号（所有查询类工具必需，请先到 https://accurlex.com 注册） |
-| `ACCURLEX_BEARER_TOKEN` | 账户查询需要 | 登录后获取的 JWT 令牌（7天有效期） |
+| `ACCURLEX_BEARER_TOKEN` | ✅ 是（除 login/extract） | 登录后获取的 JWT 令牌（7天有效期） |
 | `ACCURLEX_REQUEST_TIMEOUT_MS` | 否 | 请求超时毫秒数（默认 600000 = 10 分钟） |
+
+⚠️ 从 `accurlex-mcp-server v0.4.0` 开始：`accurlex_legal_qa`（deep/expert）、`accurlex_contract_review`、`accurlex_draft_document`、`accurlex_get_account_status` 均要求 `ACCURLEX_BEARER_TOKEN`。
 
 ---
 
@@ -118,7 +120,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 例如，如果 VS Code 打开的是 `C:\projects\my-workspace`，则配置文件路径必须是 `C:\projects\my-workspace\.vscode\settings.json`。
 
-**基础配置（需先在 https://accurlex.com 注册，获取手机号后填入）：**
+**基础配置（仅登录与本地文件提取可用）：**
 
 ```json
 {
@@ -139,7 +141,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 }
 ```
 
-**完整配置（含 JWT 令牌，账户查询+付费功能可用）：**
+**完整配置（含 JWT 令牌，所有法律工具可用）：**
 
 ```json
 {
@@ -181,7 +183,7 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 如果文件不存在，手动创建。
 
-**基础配置（需先在 https://accurlex.com 注册）：**
+**基础配置（仅登录与本地文件提取可用）：**
 
 ```json
 {
@@ -305,138 +307,12 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 ---
 
-### OpenClaw / 龙虾
-
-```json
-{
-  "mcpServers": {
-    "accurlex": {
-      "command": "npx",
-      "args": ["-y", "accurlex-mcp-server"],
-      "env": {
-        "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
-        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
-      }
-    }
-  }
-}
-```
-
----
-
-### Lobster GUI Manual Fill (NetEase Youdao)
-
-If the user opens the manual MCP form in Lobster, fill fields as follows:
-
-- 服务名称: `accurlex`
-- 描述: `accurLex China-law legal assistant`
-- 传输类型: `标准输入输出 (stdio)`
-- 命令: `npx`
-- 参数 (one per line):
-  - `-y`
-  - `accurlex-mcp-server`
-- 环境变量:
-  - `ACCURLEX_PROXY_BASE_URL` = `https://accurlex.com`
-  - `ACCURLEX_API_BASE_URL` = `https://accurlex.com/index.php`
-  - `ACCURLEX_BILLING_PHONE` = 你的注册手机号
-
-After saving:
-
-1. Ensure this MCP is enabled.
-2. If tools still do not appear, restart Lobster once.
-3. Re-run the original legal request directly.
-
-### Lobster Auto-Install Strategy (Skill-driven)
-
-Scope note:
-
-- This auto-install strategy is specific to NetEase Youdao LobsterAI's local implementation.
-- It is not a generic MCP standard flow for all clients.
-
-This skill should attempt automatic MCP readiness in the following order:
-
-1. **Auto-detect availability first**
-  - If accurLex tools are already available, call them directly.
-2. **If tools are unavailable, try code-based install first (no GUI click required)**
-  - Use terminal code to write Lobster local SQLite table `mcp_servers` directly.
-  - Install target should be a custom stdio server named `accurlex`.
-  - Use the same config as this document: command `npx`, args `[-y, accurlex-mcp-server]`, env with API base URLs.
-3. **If code-based install fails, switch to guided GUI fallback automatically**
-  - Tell the user that automatic write failed and provide the exact MCP config snippet.
-  - Instruct the user to open Lobster MCP panel and add the same custom stdio server manually.
-4. **After user confirms installation, continue automatically**
-  - Re-check tool availability.
-  - Resume the original legal task without asking the user to repeat everything.
-
-Important implementation notes (verified from Lobster source design):
-
-- The DB-write method below is Lobster-specific (NetEase Youdao), not a universal MCP client method.
-- Lobster stores MCP in local SQLite database `lobsterai.sqlite`, table `mcp_servers`.
-- Lobster app name is `LobsterAI`, so default userData paths are:
-  - Windows: `%APPDATA%/LobsterAI/lobsterai.sqlite`
-  - macOS: `~/Library/Application Support/LobsterAI/lobsterai.sqlite`
-  - Linux: `~/.config/LobsterAI/lobsterai.sqlite`
-- Lobster keeps state in memory and writes DB on save, so close Lobster before external DB write, then reopen Lobster.
-
-### Lobster Code-Install Template (preferred over GUI)
-
-When MCP is missing, run this Python template in terminal:
-
-```python
-import json, os, sqlite3, time, uuid
-from pathlib import Path
-
-def resolve_db_path() -> Path:
-    appdata = os.environ.get("APPDATA")
-    if appdata:
-        p = Path(appdata) / "LobsterAI" / "lobsterai.sqlite"
-        if p.exists(): return p
-    p = Path.home() / "Library" / "Application Support" / "LobsterAI" / "lobsterai.sqlite"
-    if p.exists(): return p
-    return Path.home() / ".config" / "LobsterAI" / "lobsterai.sqlite"
-
-db_path = resolve_db_path()
-if not db_path.exists():
-    raise SystemExit(f"Lobster DB not found: {db_path}")
-
-cfg = {
-    "command": "npx",
-    "args": ["-y", "accurlex-mcp-server"],
-    "env": {
-        "ACCURLEX_PROXY_BASE_URL": "https://accurlex.com",
-        "ACCURLEX_API_BASE_URL": "https://accurlex.com/index.php",
-        "ACCURLEX_BILLING_PHONE": "你的注册手机号"
-    }
-}
-
-now = int(time.time() * 1000)
-name, desc, tt = "accurlex", "accurLex China-law legal assistant", "stdio"
-config_json = json.dumps(cfg, ensure_ascii=False)
-conn = sqlite3.connect(str(db_path))
-cur = conn.cursor()
-cur.execute("SELECT id FROM mcp_servers WHERE name = ?", (name,))
-row = cur.fetchone()
-if row:
-    cur.execute("UPDATE mcp_servers SET description=?, enabled=1, transport_type=?, config_json=?, updated_at=? WHERE name=?",
-                (desc, tt, config_json, now, name))
-else:
-    cur.execute("INSERT INTO mcp_servers (id,name,description,enabled,transport_type,config_json,created_at,updated_at) VALUES (?,?,?,1,?,?,?,?)",
-                (str(uuid.uuid4()), name, desc, tt, config_json, now, now))
-conn.commit(); conn.close()
-print(f"MCP installed/updated: {name} @ {db_path}")
-```
-
-After script success: reopen Lobster, re-check MCP tool availability, continue original legal task.
-
----
-
 ## Authentication
 
 ### 认证流程
 
 1. **所有查询类工具均需要注册手机号** — 请先到 https://accurlex.com 注册账号，并在客户端配置中填写 `ACCURLEX_BILLING_PHONE`。`accurlex_extract_text_from_file`（本地文件）和 `accurlex_login` 除外。
-2. **账户查询需要登录** — `accurlex_get_account_status` 需要 JWT 令牌；合同审查、文书生成、expert 问答按当前实现需要 `ACCURLEX_BILLING_PHONE`。
+2. **登录后才能调用远程法律工具** — 按 v0.4.0 安全更新，`accurlex_legal_qa`（deep/expert）、`accurlex_contract_review`、`accurlex_draft_document`、`accurlex_get_account_status` 都需要 JWT 令牌（`Authorization: Bearer`）。
 
 ### 登录步骤
 
@@ -451,7 +327,7 @@ After script success: reopen Lobster, re-check MCP tool availability, continue o
 
 ### 登录后配置（关键步骤）
 
-登录成功后，**必须将返回的 token 保存到客户端配置中**，否则付费功能无法使用：
+登录成功后，**必须将返回的 token 保存到客户端配置中**，否则除 `accurlex_login` 和 `accurlex_extract_text_from_file` 外的工具不可用：
 
 **VS Code：** 将 `ACCURLEX_BEARER_TOKEN` 和 `ACCURLEX_BILLING_PHONE` 添加到 `.vscode/settings.json` 的 `env` 字段中（见上方"完整配置"示例），然后重新加载窗口。
 
@@ -468,9 +344,9 @@ After script success: reopen Lobster, re-check MCP tool availability, continue o
 | Tool | Description | Billing | Required Env | 预期耗时 |
 |------|-------------|---------|--------------|---------|
 | `accurlex_login` | 手机号+密码登录，返回 JWT 令牌 | free | `API_BASE_URL` | 1-3 秒 |
-| `accurlex_legal_qa` | 法律问答（deep 免费配额 / expert 付费） | deep=free quota, expert=paid | `PROXY_BASE_URL` + `BILLING_PHONE` | 10-30 秒 |
-| `accurlex_contract_review` | 合同审查 → 审查意见书 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` | **1-3 分钟** |
-| `accurlex_draft_document` | 法律文书生成 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` | **1-2 分钟** |
+| `accurlex_legal_qa` | 法律问答（deep 免费配额 / expert 付费） | deep=free quota, expert=paid | `PROXY_BASE_URL` + `BILLING_PHONE` + `BEARER_TOKEN` | 10-30 秒 |
+| `accurlex_contract_review` | 合同审查 → 审查意见书 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` + `BEARER_TOKEN` | **1-3 分钟** |
+| `accurlex_draft_document` | 法律文书生成 | paid | `PROXY_BASE_URL` + `BILLING_PHONE` + `BEARER_TOKEN` | **1-2 分钟** |
 | `accurlex_get_account_status` | 查询账户点数余额 | free | `API_BASE_URL` + `BEARER_TOKEN` | 1-3 秒 |
 | `accurlex_extract_text_from_file` | 提取本地纯文本文件内容 | free | none | <1 秒 |
 
@@ -527,11 +403,10 @@ Map user intent to the appropriate accurLex tool:
   - VS Code: check `.vscode/settings.json` exists in workspace root with MCP config → reload window.
   - Claude Desktop: check config JSON file exists → restart Claude.
   - Cursor/Windsurf: check MCP settings or `.cursor/mcp.json` / `.windsurf/mcp.json` → restart.
-  - Lobster: run the "Lobster Auto-Install Strategy".
 
 ### 1. Check authentication
 
-If the user needs paid features and hasn't configured credentials yet:
+If the user needs legal MCP tools and hasn't configured credentials yet:
 1. Call `accurlex_login` with user's phone + password.
 2. Help user save the returned JWT token into their client config's `env` field.
 3. Instruct user to reload/restart the client.
@@ -587,6 +462,7 @@ Assume China-law analysis unless stated otherwise. If the matter is not about Ch
 - If payment-gated capability is unavailable (insufficient points), say so directly
 - If no MCP server is connected, tell the user and offer to help configure it
 - Do not treat this skill as install-only documentation when the user's real intent is to complete a legal task through MCP
+- For `tool_unavailable`, check whether `ACCURLEX_BEARER_TOKEN` is missing/expired before assuming endpoint failure
 
 ## Error Handling
 
@@ -596,7 +472,7 @@ Assume China-law analysis unless stated otherwise. If the matter is not about Ch
 | `insufficient_balance` | Not enough points (HTTP 402) | Suggest user top up at accurlex.com |
 | `auth_failed` | Wrong phone or password | Ask user to check credentials |
 | `rate_limited` | Too many requests | Wait and retry |
-| `tool_unavailable` | Missing env config (e.g. `ACCURLEX_API_BASE_URL is required`) | Check env vars are set in client config's `env` field or `.env` file |
+| `tool_unavailable` | Missing env config (often missing `ACCURLEX_BEARER_TOKEN`) | Check `ACCURLEX_PROXY_BASE_URL` / `ACCURLEX_API_BASE_URL` / `ACCURLEX_BILLING_PHONE` / `ACCURLEX_BEARER_TOKEN` in client config `env` or `.env` |
 | `upstream_timeout` | AI backend timeout | Retry once, then report |
 
 ## Platform-Specific Troubleshooting
@@ -618,7 +494,7 @@ Assume China-law analysis unless stated otherwise. If the matter is not about Ch
   1. 确认 `settings.json` 在工作区**根目录**的 `.vscode/` 下。
   2. 确认已执行"Reload Window"。
   3. 检查 VS Code 输出面板中 MCP 相关的错误日志。
-- **`tool_unavailable` 错误：** 环境变量未设置。确认 `ACCURLEX_PROXY_BASE_URL` 和 `ACCURLEX_API_BASE_URL` 在 `settings.json` 的 `env` 字段中。
+- **`tool_unavailable` 错误：** 环境变量未设置。确认 `ACCURLEX_PROXY_BASE_URL`、`ACCURLEX_API_BASE_URL`、`ACCURLEX_BILLING_PHONE`、`ACCURLEX_BEARER_TOKEN` 在 `settings.json` 的 `env` 字段中。
 
 ### Claude Desktop 问题
 
