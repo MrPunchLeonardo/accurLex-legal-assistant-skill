@@ -1,0 +1,5 @@
+# Local secrets
+accurlex_mcpfree_skill/.env
+
+# Local runtime/debug scripts
+accurlex_mcpfree_skill/task_login_runtime.js
