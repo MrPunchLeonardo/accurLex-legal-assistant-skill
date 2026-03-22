@@ -3,3 +3,5 @@ accurlex_mcpfree_skill/.env
 
 # Local runtime/debug scripts
 accurlex_mcpfree_skill/task_login_runtime.js
+accurlex_mcpfree_skill/测试结果/问答的完整返回.txt
+accurlex_mcpfree_skill/测试结果/合同审查完整返回.txt

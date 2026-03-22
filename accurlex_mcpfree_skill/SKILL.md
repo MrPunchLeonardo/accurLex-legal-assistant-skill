@@ -7,7 +7,7 @@ description: "Use when users need China-law legal Q&A, contract review, drafting
 
 ## Open Source
 
-- Repository: https://github.com/MrPunchLeoanrdo/accurLex-legal-assistant-skill
+- Repository: https://github.com/MrPunchLeonardo/accurLex-legal-assistant-skill
 
 ## Purpose
 
