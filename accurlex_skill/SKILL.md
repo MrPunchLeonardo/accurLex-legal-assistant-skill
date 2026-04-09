@@ -354,13 +354,13 @@ ACCURLEX_BEARER_TOKEN=登录后获取的JWT令牌
 
 ## Input Limits (aligned with website)
 
-| Field | Max Length |
-|-------|-----------|
-| Legal QA question | 10,000 chars |
-| Contract text + standpoint (combined) | 10,000 chars |
-| Draft document facts | 10,000 chars |
-| Reviewer name | 40 chars |
-| Draft followup prompt | 2,000 chars |
+| Field | Free/Deep Mode | Expert/Paid Mode |
+|-------|---------------|-----------------|
+| Legal QA question | 10,000 chars | 30,000 chars |
+| Contract text + standpoint (combined) | — (paid only) | 30,000 chars |
+| Draft document facts | — (paid only) | 30,000 chars |
+| Reviewer name | 40 chars | 40 chars |
+| Draft followup prompt | 2,000 chars | 2,000 chars |
 
 Input is sanitized: null bytes and control characters are stripped (matching the website's `normalizeTextInput`).
 
@@ -468,7 +468,7 @@ Assume China-law analysis unless stated otherwise. If the matter is not about Ch
 
 | Error Code | Meaning | Action |
 |-----------|---------|--------|
-| `input_too_long` | Text exceeds 10,000 char limit | Ask user to shorten input |
+| `input_too_long` | Text exceeds char limit (10,000 for free, 30,000 for paid) | Ask user to shorten input or switch to expert mode |
 | `insufficient_balance` | Not enough points (HTTP 402) | Suggest user top up at accurlex.com |
 | `auth_failed` | Wrong phone or password | Ask user to check credentials |
 | `rate_limited` | Too many requests | Wait and retry |
